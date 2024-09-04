@@ -33,12 +33,6 @@ class Module {
 
 		modules[this._name] = this;
 	};
-
-	setBind(newBind, callback) {
-		this._bind = newBind;
-
-		if (callback) this._func();
-	};
 };
 
 //	class ToastNotif {
