@@ -167,6 +167,7 @@ class CoreFunctions {
 
 	new Module('open-cmd', 'Slash', function() {
 		core.openCommandBox();
+		mainKeyDown = false;
 	});
 
 	// no chat filter
@@ -187,12 +188,33 @@ class CoreFunctions {
 	privInputBox.addEventListener('input', onInput);
 
 	// anti spam bot (this is so sad)
+	const sesstionTokenRegex = /^[0-9a-fA-F]+$/;
+	const isSessionToken = (text) => {
+		if (text.length !== 66) return [false, text];
+
+		return [sesstionTokenRegex.test(text), text];
+	};
+
+	const hasSessionToken = (text) => {
+		const words = text.split(' ');
+
+		for (const word of words) {
+			const [isBad, token] = isSessionToken(word);
+			if (isBad) return token;
+		};
+
+		return null;
+	};
+
 	const containsBlacklisted = (text) => {
 		for (const word of blacklistedWordsList) {
-			if (text.includes(word)) {
-				return word;
-			};
+			if (text.includes(word)) return word;
 		};
+
+		const [isBad, _] = isSessionToken(text);
+		if (isBad) return 'session token';
+
+		if (hasSessionToken(text)) return 'session token';
 
 		return null;
 	};
@@ -208,15 +230,25 @@ class CoreFunctions {
 					if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'LI') {
 						const msg = node.querySelector('.chat_message');
 						const avs = node.querySelector('.avtrig.avs_menu.chat_avatar'); 
-						const userId = avs.getAttribute('data-id');
+
+						if (avs) {
+							const userId = avs.getAttribute('data-id');
+						};
 
 						if (msg) {
-							const msgText = msg.textContent.trim().toLowerCase().replace(/[`'.,:;_]/g, '');
+							const msgText = msg.textContent.trim().toLowerCase().replace(/[`'/.,:;_]/g, '');
 							const detected = containsBlacklisted(msgText);
 							if (detected) {
 								node.remove();
-								// ignoreUser(Number(userId)); make this a setting in the ui
 								core.print(`removed: "${msgText}" due to: "${detected}"`);
+
+								// if (userId) ignoreUser(Number(userId)); // make this a setting in the ui
+							};
+
+							// remove large blocks of text
+							if (msgText.length >= 200)  {
+								node.remove();
+								core.print(`removed: "${msgText.slice(0, 70)}..." due to having more than 200 characters (${msgText.length})`);
 							};
 						};
 					};

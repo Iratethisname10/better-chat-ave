@@ -7,3 +7,5 @@
 // @require      https://raw.githubusercontent.com/Iratethisname10/better-chat-ave/main/src/main.js
 // @run-at       start
 // ==/UserScript==
+
+// the actuall script is loaded through @require
