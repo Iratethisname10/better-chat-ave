@@ -7,3 +7,10 @@
 [*] fixed erros ; now checks if .avtrig.avs_menu chat_avatar element exists.
 [*] fixed command prompt ; fixed it making the main key held down
 ```
+
+### 6/9/24
+```ini
+[+] more detections ; detects mathematical alphanumeric symbols
+
+[*] optimized stuff i think
+```
