@@ -18,8 +18,6 @@ const privInputBox = document.getElementById('private_input_box');
 const privCloseButton = document.getElementById('private_close');
 const chatLogContainer = document.getElementById('chat_logs_container');
 
-const nextDm = document.getElementsByClassName('fmenu_item fmuser bhover brad5 priv_mess');
-
 class Module {
 	constructor(id, bind, func) {
 		this._bind = bind;
@@ -165,7 +163,7 @@ const initCharObserver = () => {
 
 							if (msgText.length >= 200)  {
 								node.remove();
-								if (!config.disableDetectionLogs) core.print(`removed: "${msgText.slice(0, 70)}..." due to having more than 200 characters (${msgText.length})`);
+								if (!config.disableDetectionLogs) core.print(`removed: "${msgText.slice(0, 50)}..." due to having more than 200 characters (${msgText.length})`);
 								if (userId && config.blockLargeTextSpammers) ignoreUser(Number(userId));
 							};
 						};
