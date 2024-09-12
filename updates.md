@@ -14,3 +14,11 @@
 
 [*] optimized stuff i think
 ```
+
+### 12/9/24
+```ini
+[+] unblock all command ; unblocks all blocked people
+[+] country command ; lets you search people based on country (why dont they already have this ><)
+
+[*] block keybind removes notification ; when you use the block keybind, it removes that annoying notification
+```
