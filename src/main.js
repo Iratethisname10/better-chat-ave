@@ -4,19 +4,22 @@ config.disableDetectionLogs = false;
 config.blockDetectedPeople = false;
 config.blockLargeTextSpammers = false;
 
+let hookConfig = [];
+
 const modules = {};
 
 let mainKeyDown = false;
 let blacklistedWordsList;
 let stopObserving;
 
-let core, cmdAPI;
+let core, cmdAPI, hooks;
 let onKeyDownMain, onKeyUpMain, onKeyDownModule, onInput;
 
 const mainInputBox = document.getElementById('main_input_box');
 const privInputBox = document.getElementById('private_input_box');
 const privCloseButton = document.getElementById('private_close');
 const chatLogContainer = document.getElementById('chat_logs_container');
+const chatRight = document.getElementById('chat_right');
 
 class Module {
 	constructor(id, bind, func) {
@@ -40,6 +43,10 @@ class CommandAPI {
 		alert('Usage:\nrebind <module id> <new bind>\ne.g. rebind open-dms k');
 	};
 
+	__countryUsage() {
+		alert('Usage:\ncountry <country code>\ne.g. country sg\ncountry code is not case sensitive.');
+	};
+
 	cmds() {
 		const funcs = Object.getOwnPropertyNames(CommandAPI.prototype).filter(name => {
 			return name !== 'constructor' && !name.startsWith('__') && typeof CommandAPI.prototype[name] === 'function';
@@ -55,7 +62,7 @@ class CommandAPI {
 
 	// main cmds
 	rebind(id, newBind) {
-		if (!id || !newBind) return this.__rebindUsage();
+		if (!id || !newBind) return cmdAPI.__rebindUsage();
 
 		if (modules[id]) {
 			modules[id]._bind = newBind.toUpperCase();
@@ -66,6 +73,38 @@ class CommandAPI {
 	resetbinds() {
 		Object.values(modules).forEach(module => module._bind = module._originBind);
 		alert('Resetted all binds.');
+	};
+
+	unblockall() {
+		ignoreList.forEach(id => unIgnore(id));
+	};
+
+	country(code) {
+		if (!code) return cmdAPI.__countryUsage();
+
+		if (chatRight.style.display !== 'table-cell') chatRight.style.display = 'table-cell';
+
+		prepareRight(0);
+		$.post('system/panel/user_list.php', {}, function(res) {
+			$('#chat_right_data').html(res);
+			firstPanel = '';
+
+			document.querySelectorAll('#chat_right_data .user_item').forEach(item => {
+				const country = item.getAttribute('data-country');
+				if (country !== code.toUpperCase()) item.remove();
+			});
+		});
+	};
+};
+
+class Hooks {
+	disableNotifs() {
+		hookConfig.oldNotif = callSaved;
+		callSaved = () => {};
+	};
+
+	enableNotifs() {
+		callSaved = hookConfig.oldNotif;
 	};
 };
 
@@ -177,12 +216,16 @@ const initCharObserver = () => {
 	core.print('Chat observer inited!');
 };
 
+// modules
 (() => {
 	new Module('open-dms', 'L', function() {
 		getPrivate();
 	});
 
 	new Module('block', 'B', function() {
+		hooks.disableNotifs();
+		setTimeout(hooks.enableNotifs, 400); // task.delay(0.4, hooks.enableNotifs)
+		
 		ignoreThisUser();
 		privCloseButton?.click();
 	});
@@ -234,6 +277,7 @@ const init = async () => {
 
 	core = new CoreFunctions();
 	cmdAPI = new CommandAPI();
+	hooks = new Hooks();
 
 	document.addEventListener('keydown', onKeyDownMain);
 	document.addEventListener('keyup', onKeyUpMain);
