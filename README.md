@@ -1,25 +1,16 @@
 # Better Chat Avenue
-
-Something to make chat avenue better lol
+Some side project i made to make your experience on chat avenue abit better.
 
 ## Features
+- **Chat Filter Bypass:** Bypasses the annoying chat filter to ensure your messages are delivered as intended.
+- **Spam Bot Filter:** Automatically detect and filters out messages that might have been sent by spammers or bots.
+- **Keybinds:** Keybinds for quick access to common actions. You can see all available binds by typing 'modules' in the command line.
+- **Command Line:** Click `Right Shift` + `/` to open the command line. Use this to execute commands and configure settings.
 
-### Chat Filter Bypass
-Bypasses the annoying chat filter and lets you say whatever you want!
+## Installation
+1. Add [Tampermonkey](https://www.tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/) to your extentions.
+2. Add a new script.
+3. Copy and paste the contents of [this website](https://raw.githubusercontent.com/Iratethisname10/better-chat-ave/main/src/inject.js) into the editor and save.
 
-### Spam Bot Filter
-Detect and remove messages sent by those annoying spam bots. This is not perfect and may occasionally remove messages sent by actuall people. You can see all the detected words [here](https://raw.githubusercontent.com/Iratethisname10/better-chat-ave/main/detections.json).
-
-### Keybinds
-Keybinds for some stuff so you dont have to move your mouse. These keybinds can be changed with the 'rebind' cmd.
-
-Main Keybinds:
-- Open Dms (L)
-- Block Current User (B)
-
-Misc Keybinds:
-- Unload (del)
-- Open cmd (/)
-
-### Command Line
-Click right-shift and / (slash) together to open the command line. You can type 'cmds' to get a full list of commands.
+## Contact
+For any questions or support, please contact `__vocat` on discord.
