@@ -1,10 +1,12 @@
 const config = [];
-config.mainKey = 'ShiftRight';
-config.disableDetectionLogs = false;
-config.blockDetectedPeople = false;
-config.blockLargeTextSpammers = false;
+config.mainKey = 'ShiftRight'; // the main key for keybinds e.g. ShiftRight + B
+config.chatBypass = true; // bypasses the chat filter
+config.antiSpam = true; // attempts to remove spam or unwanted messages
+config.logDetectedMessages = true; // logs detected messages to the console
+config.blockDetectedPeople = false; // blocks people that have sent a unwanted message
+config.removeLongMessages = false; // removes messages that are over 200 characters long
 
-let hookConfig = [];
+let hookStore = [];
 
 const modules = {};
 
@@ -41,10 +43,12 @@ class CommandAPI {
 
 	__rebindUsage() {
 		alert('Usage:\nrebind <module id> <new bind>\ne.g. rebind open-dms k');
+		core.openCommandBox();
 	};
 
 	__countryUsage() {
 		alert('Usage:\ncountry <country code>\ne.g. country sg\ncountry code is not case sensitive.');
+		core.openCommandBox();
 	};
 
 	cmds() {
@@ -93,18 +97,31 @@ class CommandAPI {
 				const country = item.getAttribute('data-country');
 				if (country !== code.toUpperCase()) item.remove();
 			});
+			hooks.hookCloseRight();
 		});
 	};
 };
 
 class Hooks {
 	disableNotifs() {
-		hookConfig.oldNotif = callSaved;
+		hookStore.oldNotif = callSaved;
 		callSaved = () => {};
 	};
 
 	enableNotifs() {
-		callSaved = hookConfig.oldNotif;
+		callSaved = hookStore.oldNotif;
+	};
+
+	hookCloseRight() {
+		const oldCloseRight = closeRight;
+
+		closeRight = () => {
+			prepareRight(0);
+			userReload(1);
+
+			hooks.unhookCloseRight();
+			closeRight = oldCloseRight;
+		};
 	};
 };
 
@@ -144,6 +161,8 @@ class CoreFunctions {
 
 const initChatBypass = () => {
 	onInput = (event) => {
+		if (!config.chatBypass) return;
+
 		const input = event.target;
 		const currentVal = input.value;
 	
@@ -184,7 +203,7 @@ const initCharObserver = () => {
 		for (const mutation of mutationsList) {
 			if (mutation.type === 'childList') {
 				mutation.addedNodes.forEach(node => {
-					if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'LI') {
+					if (config.antiSpam && node.nodeType === Node.ELEMENT_NODE && node.tagName === 'LI') {
 						const msg = node.querySelector('.chat_message');
 						const avs = node.querySelector('.avtrig.avs_menu.chat_avatar'); 
 
@@ -195,15 +214,26 @@ const initCharObserver = () => {
 							const detected = containsBlacklisted(msgText);
 							if (detected) {
 								node.remove();
-								if (!config.disableDetectionLogs) core.print(`removed: "${msgText}" due to: "${detected}"`);
+								if (config.logDetectedMessages) core.print(`removed: "${msgText}" due to: "${detected}"`);
 
-								if (userId && config.blockDetectedPeople) ignoreUser(Number(userId));
+								if (userId && config.blockDetectedPeople) {
+									hooks.disableNotifs();
+									setTimeout(hooks.enableNotifs, 400);
+
+									ignoreUser(Number(userId));
+								};
 							};
 
-							if (msgText.length >= 200)  {
+							if (msgText.length >= 200 && config.removeLongMessages)  {
 								node.remove();
-								if (!config.disableDetectionLogs) core.print(`removed: "${msgText.slice(0, 50)}..." due to having more than 200 characters (${msgText.length})`);
-								if (userId && config.blockLargeTextSpammers) ignoreUser(Number(userId));
+								if (config.logDetectedMessages) core.print(`removed: "${msgText.slice(0, 50)}..." due to having more than 200 characters (${msgText.length})`);
+
+								if (userId && config.blockDetectedPeople) {
+									hooks.disableNotifs();
+									setTimeout(hooks.enableNotifs, 400);
+
+									ignoreUser(Number(userId));
+								};
 							};
 						};
 					};
@@ -224,7 +254,7 @@ const initCharObserver = () => {
 
 	new Module('block', 'B', function() {
 		hooks.disableNotifs();
-		setTimeout(hooks.enableNotifs, 400); // task.delay(0.4, hooks.enableNotifs)
+		setTimeout(hooks.enableNotifs, 400);
 		
 		ignoreThisUser();
 		privCloseButton?.click();
