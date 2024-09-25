@@ -119,7 +119,6 @@ class Hooks {
 			prepareRight(0);
 			userReload(1);
 
-			hooks.unhookCloseRight();
 			closeRight = oldCloseRight;
 		};
 	};
