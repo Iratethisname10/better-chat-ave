@@ -252,9 +252,6 @@ const initCharObserver = () => {
 	});
 
 	new Module('block', 'B', function() {
-		hooks.disableNotifs();
-		setTimeout(hooks.enableNotifs, 400);
-		
 		ignoreThisUser();
 		privCloseButton?.click();
 	});
@@ -307,6 +304,8 @@ const init = async () => {
 	core = new CoreFunctions();
 	cmdAPI = new CommandAPI();
 	hooks = new Hooks();
+
+	hooks.disableNotifs();
 
 	document.addEventListener('keydown', onKeyDownMain);
 	document.addEventListener('keyup', onKeyUpMain);
