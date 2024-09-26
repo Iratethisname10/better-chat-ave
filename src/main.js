@@ -2,7 +2,7 @@ const config = [];
 config.mainKey = 'ShiftRight'; // the main key for keybinds e.g. ShiftRight + B
 config.chatBypass = true; // bypasses the chat filter
 config.antiSpam = true; // attempts to remove spam or unwanted messages
-config.logDetectedMessages = true; // logs detected messages to the console
+config.logDetectedMessages = false; // logs detected messages to the console
 config.blockDetectedPeople = false; // blocks people that have sent a unwanted message
 config.removeLongMessages = false; // removes messages that are over 200 characters long
 
@@ -15,7 +15,7 @@ let blacklistedWordsList;
 let stopObserving;
 
 let core, cmdAPI, hooks;
-let onKeyDownMain, onKeyUpMain, onKeyDownModule, onInput;
+let onKeyDownMain, onKeyUpMain, onKeyDownMisc, onInput, onKeyDown;
 
 const mainInputBox = document.getElementById('main_input_box');
 const privInputBox = document.getElementById('private_input_box');
@@ -36,18 +36,13 @@ class Module {
 };
 
 class CommandAPI {
-	__ThrowInvalidCommandError() {
+	__invalidCmd() {
 		alert('Invalid command, type "cmds" for a list of commands.');
 		core.openCommandBox();
 	};
 
-	__rebindUsage() {
-		alert('Usage:\nrebind <module id> <new bind>\ne.g. rebind open-dms k');
-		core.openCommandBox();
-	};
-
-	__countryUsage() {
-		alert('Usage:\ncountry <country code>\ne.g. country sg\ncountry code is not case sensitive.');
+	__help(helpText) {
+		alert(`Usage: \n${helpText}`);
 		core.openCommandBox();
 	};
 
@@ -66,7 +61,7 @@ class CommandAPI {
 
 	// main cmds
 	rebind(id, newBind) {
-		if (!id || !newBind) return cmdAPI.__rebindUsage();
+		if (!id || !newBind) return cmdAPI.__help('rebind <module id> <new bind>\ne.g. rebind open-dms k');
 
 		if (modules[id]) {
 			modules[id]._bind = newBind.toUpperCase();
@@ -84,7 +79,7 @@ class CommandAPI {
 	};
 
 	country(code) {
-		if (!code) return cmdAPI.__countryUsage();
+		if (!code) return cmdAPI.__help('country <country code>\ne.g. country sg\ncountry code is not case sensitive.');
 
 		if (chatRight.style.display !== 'table-cell') chatRight.style.display = 'table-cell';
 
@@ -99,6 +94,19 @@ class CommandAPI {
 			});
 			hooks.hookCloseRight();
 		});
+	};
+
+	save(...message) {
+		if (message.length < 1) return cmdAPI.__help('save <message to save>\ne.g. save hi dm if you like cheese.');
+
+		const joinedMsg = message.join(' ');
+
+		localStorage.setItem('bca_savedmsg', joinedMsg);
+		core.print('saved: ' + joinedMsg)
+	};
+
+	clearsave() {
+		localStorage.removeItem('bca_savedmsg');
 	};
 };
 
@@ -130,6 +138,7 @@ class CoreFunctions {
 	};
 
 	unload() {
+		mainInputBox.removeEventListener('keydown', onKeyDown);
 		mainInputBox.removeEventListener('input', onInput);
 		privInputBox.removeEventListener('input', onInput);
 
@@ -151,22 +160,22 @@ class CoreFunctions {
 		if (args.length < 1) return;
 
 		const command = cmdAPI[args[0].toLowerCase()];
-		if (command == cmdAPI.__ThrowInvalidCommandError) return cmdAPI.__ThrowInvalidCommandError();
-		if (!command) return cmdAPI.__ThrowInvalidCommandError();
+		if (command == cmdAPI.__invalidCmd) return cmdAPI.__invalidCmd();
+		if (!command) return cmdAPI.__invalidCmd();
 
 		command(...args.slice(1));
 	};
 };
 
-const initChatBypass = () => {
+const initInputHook = () => {
 	onInput = (event) => {
 		if (!config.chatBypass) return;
 
 		const input = event.target;
 		const currentVal = input.value;
-	
+
 		const backspace = event.inputType === 'deleteContentBackward';
-	
+
 		if (backspace && currentVal.length > 0) {
 			input.value = currentVal.slice(0, -1);
 		} else if (!currentVal.endsWith('‎')) {
@@ -174,9 +183,20 @@ const initChatBypass = () => {
 		};
 	};
 
+	onKeyDown = (event) => {
+		if (event.key !== 'ArrowUp') return;
+
+		const savedMessage = localStorage.getItem('bca_savedmsg');
+		if (!savedMessage) return;
+
+		event.target.value = '';
+		event.target.value = savedMessage;
+	};
+
+	mainInputBox.addEventListener('keydown', onKeyDown);
 	mainInputBox.addEventListener('input', onInput);
 	privInputBox.addEventListener('input', onInput);
-	core.print('Filter bypass inited!');
+	core.print('input hook inited!');
 };
 
 const initCharObserver = () => {
@@ -277,10 +297,9 @@ const init = async () => {
 		if (event.code === config.mainKey) mainKeyDown = false;
 	};
 
-	onKeyDownModule = (event) => {
+	onKeyDownMisc = (event) => {
 		for (const i in modules) {
 			const module = modules[i];
-
 			const bindCode = module._bind.length > 1 ? module._bind : 'Key'.concat(module._bind);
 
 			if (event.code === bindCode && module._active && mainKeyDown) {
@@ -309,11 +328,11 @@ const init = async () => {
 
 	document.addEventListener('keydown', onKeyDownMain);
 	document.addEventListener('keyup', onKeyUpMain);
-	document.addEventListener('keydown', onKeyDownModule);
+	document.addEventListener('keydown', onKeyDownMisc);
 
 	getList();
 
-	initChatBypass();
+	initInputHook();
 	initCharObserver();
 
 	core.print('Script inited!');
