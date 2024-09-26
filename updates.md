@@ -22,3 +22,13 @@
 
 [*] block keybind removes notification ; when you use the block keybind, it removes that annoying notification
 ```
+
+## 26/9/24
+```ini
+[+] save command ; saves a text that you can easily access when clicking the up arrow
+[+] clearsave command ; clears the saved message
+
+[*] optimized
+[*] disables notifications on default
+[*] fixed a bug
+``
